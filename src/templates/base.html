@@ -104,14 +104,6 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Areus</h1>
-        <form action="/login" method="post">
-            <input placeholder="Host" type="text" id="host" name="host" required>
-            <input placeholder="Username" type="text" id="username" name="username" required>
-            <input placeholder="Password" type="password" id="password" name="password" required>
-            <button type="submit">Login</button>
-        </form>
-    </div>
+    {% block content %}{% endblock %}
 </body>
 </html>
