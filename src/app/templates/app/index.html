@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content%}
+    <div class="login-container">
+        <h1>Areus</h1>
+        <form action="/login" method="POST">
+            {% csrf_token %}
+            <input placeholder="Host" type="text" id="host" name="host" required>
+            <input placeholder="Username" type="text" id="username" name="username" required>
+            <input placeholder="Password" type="password" id="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+{% endblock %}
+
