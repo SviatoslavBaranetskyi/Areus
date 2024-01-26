@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - '8000'
     restart: unless-stopped
     volumes:
       - ./src:/areus/
@@ -27,7 +25,5 @@ services:
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-    ports:
-      - '3306'
     volumes:
       - ./data:/var/lib/mysql
