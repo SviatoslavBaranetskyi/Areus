@@ -7,7 +7,8 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
-      - ./src:/areus/
+      - ./src:/opt/areus/
+      - static-data:/var/www/static
 
   nginx:
     image: nginx:1.25.3-alpine
@@ -15,6 +16,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static-data:/var/www/static
     restart: unless-stopped
 
   db:
@@ -27,3 +29,6 @@ services:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
     volumes:
       - ./data:/var/lib/mysql
+
+volumes:
+  static-data:
