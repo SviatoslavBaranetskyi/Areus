@@ -11,7 +11,7 @@ def index(request):
 
 def login_page_view(request):
     entered_data = request.POST
-    return render(request, "app/main-page.html", {
+    return render(request, "app/main.html", {
         "Host": entered_data['host'],
         "Username": entered_data['username'],
         "Password": 'Secret'
