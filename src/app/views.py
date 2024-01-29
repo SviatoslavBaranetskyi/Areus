@@ -1,26 +1,31 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views import View
+from django.views.generic.base import TemplateView
+from django.views.generic.edit import CreateView
+
+from .forms import LoginForm
 
 
-def index(request):
+def login(request):
     if request.method == "POST":
-        return HttpResponseRedirect('/login')
-    return render(request, 'app/index.html')
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            return HttpResponseRedirect('/main')
+
+    else:
+        form = LoginForm()
+        return render(request, 'app/index.html', {
+            'form': form
+        })
 
 
-def login_page_view(request):
+def main_page_view(request):
     entered_data = request.POST
     return render(request, "app/main.html", {
         "Host": entered_data['host'],
         "Username": entered_data['username'],
-        "Password": 'Secret'
+        "Password": 'lol'
     })
 
-
-'''class LoginPageView(View):
-    def get(self, request):
-        return render(request, 'app/index.html')
-
-    def post(self, request):
-        return HttpResponse("Hello World!")'''
