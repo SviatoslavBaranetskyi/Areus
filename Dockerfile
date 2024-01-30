@@ -5,11 +5,11 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 WORKDIR /opt/areus
 
-RUN apk update && apk add gcc libc-dev
-
 COPY ./src/requirements.txt ./
 COPY ./scripts/start.sh ../
 RUN chmod +x ../start.sh
+
+RUN apk update && apk add gcc libc-dev
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install -r requirements.txt
