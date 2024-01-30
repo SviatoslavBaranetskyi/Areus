@@ -12,20 +12,28 @@ def login(request):
         form = LoginForm(request.POST)
 
         if form.is_valid():
+            request.session['host'] = form.cleaned_data['host']
+            request.session['username'] = form.cleaned_data['username']
+            request.session['password'] = form.cleaned_data['password']
+
             return HttpResponseRedirect('/main')
 
     else:
         form = LoginForm()
-        return render(request, 'app/index.html', {
-            'form': form
+
+    return render(request, 'app/index.html', {'form': form})
+
+
+class MainPageView(View):
+    def get(self, request):
+        host = request.session.get('host')
+        username = request.session.get('username')
+        password = request.session.get('password')
+
+        return render(request, 'app/main.html', {
+            'Host': host,
+            'Username': username,
+            'Password': password
         })
 
-
-def main_page_view(request):
-    entered_data = request.POST
-    return render(request, "app/main.html", {
-        "Host": entered_data['host'],
-        "Username": entered_data['username'],
-        "Password": 'lol'
-    })
 
