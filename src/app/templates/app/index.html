@@ -3,7 +3,7 @@
 {% block content%}
     <div class="login-container">
         <h1>Areus</h1>
-        <form action="{% url 'main-page' %}" method="POST">
+        <form action="{% url 'index-page' %}" method="POST">
             {% csrf_token %}
             {{ form }}
             <button type="submit">Login</button>
