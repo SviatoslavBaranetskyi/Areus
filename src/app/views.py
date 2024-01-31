@@ -11,27 +11,23 @@ from .forms import LoginForm
 def login(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
-
         if form.is_valid():
+            host=form.cleaned_data['host']
+            username=form.cleaned_data['username']
+            password=form.cleaned_data['password']
             try:
-                db = connect(
-                    host=form.cleaned_data['host'],
-                    username=form.cleaned_data['username'],
-                    password=form.cleaned_data['password']
-                )
+                db = connect(host=host, username=username, password=password)
             except:
-                return HttpResponse('ERRORRRRRRRRRRRRRRRR!')
+                return HttpResponseRedirect(request.path_info)
 
-            request.session['host'] = form.cleaned_data['host']
-            request.session['username'] = form.cleaned_data['username']
-            request.session['password'] = form.cleaned_data['password']
+            request.session['host'] = host
+            request.session['username'] = username
+            request.session['password'] = password
 
             return HttpResponseRedirect('/')
 
-    else:
-        form = LoginForm()
-
-    return render(request, 'app/index.html', {'form': form})
+    form = LoginForm()
+    return render(request, 'app/login.html', {'form': form})
 
 
 class MainPageView(View):
