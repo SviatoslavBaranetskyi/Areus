@@ -11,10 +11,9 @@
 
 body {
     display: flex;
-    align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
+    margin: auto;
     background-color: #f0f0f0;
     font-family: "Roboto", sans-serif;
     font-weight: 100;
@@ -29,6 +28,7 @@ body {
     position: relative;
     border-radius: 20px;
     text-align: center;
+    margin-top: 20%;
 }
 
 
@@ -94,4 +94,34 @@ input {
     border-radius: 20px;
     font-size: large;
     text-align: center;
+}
+
+.main {
+    display: flex;
+    padding-inline: 5%;
+    margin-top: 5%;
+    width: 100%;
+    height: 75%;
+}
+.tile {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px 10px rgba(0, 0, 0, 0.1);
+    padding-inline: 1%;
+    width: 100%;
+    height: 100%;
+    margin-inline: 1%;
+    display: inline-block;
+    overflow-wrap: break-word;
+    overflow: auto;
+}
+
+#database-list {
+    width: 15%;
+    height: fit-content;
+    max-height: -webkit-fill-available;
+}
+ul {
+  list-style-type: none;
+  padding-inline: 10%;
 }

@@ -1,7 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content%}
-{{ Host }}
-{{ Username }}
-{{ Password }}
+    <div class="main">
+        <div class="tile" id="database-list">
+            <h2>HOST</h2>
+            <h3>Databases</h3>
+            <ul>
+              <li><a href="/">Database 1</a></li>
+              <li><a href="/">Database 2</a></li>
+              <li><a href="/">Database 3</a></li>
+            </ul>
+        </div>
+        
+        <div class="tile" id="data-table">
+          <h2>Database</h2>
+          <div id="table-container">
+            <p>Select database</p>
+          </div>
+        </div>
+      </div>
 {% endblock %}
