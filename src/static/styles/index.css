@@ -1,14 +1,3 @@
-@property --rotate {
-            syntax: "<angle>";
-            initial-value: 132deg;
-            inherits: false;
-        }
-
-:root {
-    --login-container-height: 40vh;
-    --login-container-width: 40vh;
-}
-
 body {
     display: flex;
     justify-content: center;
@@ -18,6 +7,27 @@ body {
     font-family: "Roboto", sans-serif;
     font-weight: 100;
     font-style: normal;
+}
+
+/* LOGIN */
+@property --rotate {
+    syntax: "<angle>";
+    initial-value: 132deg;
+    inherits: false;
+}
+
+:root {
+--login-container-height: 40vh;
+--login-container-width: 40vh;
+}
+
+@keyframes spin {
+    0% {
+        --rotate: 0deg;
+    }
+    100% {
+        --rotate: 360deg;
+    }
 }
 
 .login-container {
@@ -45,15 +55,16 @@ body {
     animation: spin 5s linear infinite;
 }
 
-@keyframes spin {
-    0% {
-        --rotate: 0deg;
-    }
-    100% {
-        --rotate: 360deg;
-    }
+.login-container form {
+    margin-inline: 20%;
 }
-/* .login-container button */
+
+.login-container label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* GENERAL */
 button {
     background-color: #3c67e3;
     width: 100%;
@@ -76,15 +87,6 @@ button:hover {
     background-position: 100%;
 }
 
-.login-container form {
-    margin-inline: 20%;
-}
-
-.login-container label {
-    display: block;
-    margin-bottom: 8px;
-}
-
 input {
     width: 100%;
     padding: 8px;
@@ -96,6 +98,27 @@ input {
     text-align: center;
 }
 
+ul {
+    list-style-type: none;
+    padding-inline: 10%;
+}
+
+li {
+    padding: 1%;
+    border-top: 1px solid #ccc;
+    scroll-snap-align: start;
+    width: 100%;
+}
+
+li:first-child {
+    border: 0;
+}
+
+a { 
+    text-decoration: none; 
+}
+
+/* MAIN */
 .main {
     display: flex;
     padding-inline: 5%;
@@ -121,7 +144,33 @@ input {
     height: fit-content;
     max-height: -webkit-fill-available;
 }
-ul {
-  list-style-type: none;
-  padding-inline: 10%;
+
+#refresh-databases {
+    vertical-align: middle; 
+    margin-left: 10px;
+    max-width: 20px;
+    max-height: 20px;
+    cursor: pointer;
+}
+
+/* SCROLL BAR */
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+background: #28afb0;
+border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+background: #19647e;
 }
