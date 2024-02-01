@@ -46,14 +46,13 @@ def get_databases(request):
 
     # Fetch all databases
     databases = cursor.fetchall()
-    print(databases)
 
     # Close the cursor and connection
     cursor.close()
     db.close()
 
     # Convert the list of databases to a dictionary
-    data = {"databases": [db[0] for db in databases]}
+    data = {"databases": [db[0] for db in databases], "host": request.session['host']}
 
     return JsonResponse(data)
 
