@@ -1,20 +1,22 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
 from mysql.connector import connect
 
 from .forms import LoginForm
+from .decorators import require_session
 
 
 def login(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
-            host=form.cleaned_data['host']
-            username=form.cleaned_data['username']
-            password=form.cleaned_data['password']
+            host = form.cleaned_data['host']
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
             try:
                 db = connect(host=host, username=username, password=password)
             except:
@@ -29,11 +31,14 @@ def login(request):
     form = LoginForm()
     return render(request, 'app/login.html', {'form': form})
 
-def get_databases(request):
-    if not 'host' in request.session:
-        return HttpResponse(status=403)
 
-    db = connect(host=request.session['host'], username=request.session['username'], password=request.session['password'])
+@require_session
+def get_databases(request):
+    db = connect(
+        host=request.session['host'],
+        username=request.session['username'],
+        password=request.session['password']
+    )
     cursor = db.cursor()
 
     # Execute query to get list of databases
@@ -52,20 +57,17 @@ def get_databases(request):
 
     return JsonResponse(data)
 
+
+@method_decorator(require_session, name="dispatch")
 class MainPageView(View):
-    @staticmethod
-    def get(request):
-        if 'host' in request.session and 'username' in request.session and 'password' in request.session:
-            host = request.session.get('host')
-            username = request.session.get('username')
-            password = request.session.get('password')
+    def get(self, request):
+        host = request.session.get('host')
+        username = request.session.get('username')
+        password = request.session.get('password')
 
-            return render(request, 'app/main.html', {
-                'Host': host,
-                'Username': username,
-                'Password': password
-            })
-
-        else:
-            return HttpResponseRedirect('/login')
+        return render(request, 'app/main.html', {
+            'Host': host,
+            'Username': username,
+            'Password': password
+        })
 
