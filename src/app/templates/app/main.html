@@ -6,13 +6,9 @@
 {% block content%}
   <div class="main">
       <div class="tile" id="database-list">
-          <h2>HOST</h2>
-          <h3>Databases</h3>
-          <ul>
-            <li><a href="/">Database 1</a></li>
-            <li><a href="/">Database 2</a></li>
-            <li><a href="/">Database 3</a></li>
-          </ul>
+          <h2 id="host"></h2>
+          <h3>Databases<img id="refresh-databases" src="static/icons/refresh.png" alt="refresh"></h3>
+          <div id="databases"></div>
       </div>
       
       <div class="tile" id="data-table">
