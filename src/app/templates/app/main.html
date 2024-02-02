@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block extra_head %}
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="static/scripts/main.js"></script>
 {% endblock %}
 {% block content%}
@@ -12,9 +13,9 @@
       </div>
       
       <div class="tile" id="data-table">
-        <h2>Database</h2>
+        <h2 id="database-name">Database</h2>
         <div id="table-container">
-          <p>Select database</p>
+          <p style="margin-left: 40%; margin-top: 20%;">Select database</p>
         </div>
       </div>
     </div>
