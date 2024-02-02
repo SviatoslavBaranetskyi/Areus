@@ -8,7 +8,7 @@ $(document).ready(function() {
 
 function fetchDatabases() {
   $.ajax({
-    url: 'get_databases',
+    url: 'api/get-databases',
     type: 'GET',
     dataType: 'json',
     success: function(data) {
