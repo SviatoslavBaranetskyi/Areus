@@ -2,3 +2,5 @@ Django==4.2.9
 gunicorn==21.2.0
 mysql-connector-python==8.3.0
 djangorestframework==3.14.0
+django-compressor==4.4
+django-libsass==0.9

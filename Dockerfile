@@ -9,7 +9,7 @@ COPY ./src/requirements.txt ./
 COPY ./scripts/start.sh ../
 RUN chmod +x ../start.sh
 
-RUN apk update && apk add gcc libc-dev
+RUN apk update && apk add gcc libc-dev g++
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install -r requirements.txt
