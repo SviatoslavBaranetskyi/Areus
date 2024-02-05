@@ -33,6 +33,11 @@ def login(request):
     return render(request, 'app/login.html', {'form': form})
 
 
+def logout(request):
+    request.session.flush()
+    return HttpResponseRedirect('/login')
+
+
 @method_decorator(require_session, name="dispatch")
 class MainPageView(View):
     def get(self, request):
