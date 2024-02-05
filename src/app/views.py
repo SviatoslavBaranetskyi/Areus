@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.generic.base import TemplateView
 from mysql.connector import connect, Error
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from rest_framework import status
 
 from .forms import LoginForm
 from .decorators import require_session
+from .utils import get_database_connection, close_database_connection, execute_query
 
 
 def login(request):
@@ -39,39 +41,18 @@ def logout(request):
 
 
 @method_decorator(require_session, name="dispatch")
-class MainPageView(View):
-    def get(self, request):
-        host = request.session.get('host')
-        username = request.session.get('username')
-        password = request.session.get('password')
-
-        return render(request, 'app/main.html', {
-            'Host': host,
-            'Username': username,
-            'Password': password
-        })
+class MainPageView(TemplateView):
+    template_name = 'app/main.html'
 
 
 @method_decorator(require_session, name="dispatch")
 class GetDatabasesView(APIView):
     def get(self, request):
         try:
-            db = connect(
-                host=request.session['host'],
-                username=request.session['username'],
-                password=request.session['password']
-            )
-            cursor = db.cursor()
-
-            # Execute query to get list of databases
-            cursor.execute("SHOW DATABASES")
-
-            # Fetch all databases
+            db = get_database_connection(request)
+            cursor = execute_query(db, "SHOW DATABASES")
             databases = cursor.fetchall()
-
-            # Close the cursor and connection
-            cursor.close()
-            db.close()
+            close_database_connection(db, cursor)
 
             # Serialize the data
             formatted_data = {
@@ -88,35 +69,21 @@ class GetDatabasesView(APIView):
 @method_decorator(require_session, name="dispatch")
 class GetTablesView(APIView):
     def get(self, request):
-        database_name = request.query_params.get('database')
-
         try:
-            connection = connect(
-                host=request.session['host'],
-                user=request.session['username'],
-                password=request.session['password'],
-                database=database_name
-            )
-
-            cursor = connection.cursor()
-
-            cursor.execute("SHOW TABLES")
+            connection = get_database_connection(request)
+            cursor = execute_query(connection, "SHOW TABLES")
 
             # Fetch all tables
             tables = [table[0] for table in cursor.fetchall()]
 
             data = {
-                'database': database_name,
+                'database': request.query_params.get('database'),
                 'tables': {}
             }
 
             for table in tables:
-                # Information about each table
-                table_info_query = f"SHOW TABLE STATUS LIKE '{table}'"
-                cursor.execute(table_info_query)
-                table_data = cursor.fetchone()
+                table_data = execute_query(connection, f"SHOW TABLE STATUS LIKE '{table}'").fetchone()
 
-                # Extract relevant information
                 rows_count = table_data[4]
                 data_length = table_data[6]
                 collation = table_data[14]
@@ -128,12 +95,9 @@ class GetTablesView(APIView):
                     'collation': collation
                 }
 
-            # Close the cursor and connection
-            cursor.close()
-            connection.close()
+            close_database_connection(connection, cursor)
 
             return Response(data, status=status.HTTP_200_OK)
 
         except Error as e:
             return Response({'error': f'Error fetching tables: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
