@@ -101,3 +101,29 @@ class GetTablesView(APIView):
 
         except Error as e:
             return Response({'error': f'Error fetching tables: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(require_session, name="dispatch")
+class GetTableRowsView(APIView):
+    def get(self, request):
+        database_name = request.query_params.get('database')
+        table_name = request.query_params.get('table')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = execute_query(connection, f"SELECT * FROM {database_name}.{table_name}")
+
+            columns = [desc[0] for desc in cursor.description]
+            rows = [list(row) for row in cursor.fetchall()]
+
+            close_database_connection(connection, cursor)
+
+            data = {
+                'columns': columns,
+                'rows': rows
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error fetching rows: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
