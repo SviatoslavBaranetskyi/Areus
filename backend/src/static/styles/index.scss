@@ -1,0 +1,225 @@
+body {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    margin: auto;
+    background-color: #f0f0f0;
+    font-family: "Roboto", sans-serif;
+    font-weight: 100;
+    font-style: normal;
+}
+
+/* LOGIN */
+@property --rotate {
+    syntax: "<angle>";
+    initial-value: 132deg;
+    inherits: false;
+}
+
+:root {
+    --login-container-height: 40vh;
+    --login-container-width: 40vh;
+}
+
+@keyframes spin {
+    0% {
+        --rotate: 0deg;
+    }
+
+    100% {
+        --rotate: 360deg;
+    }
+}
+
+.login-container {
+    background: whitesmoke;
+    width: var(--login-container-width);
+    height: var(--login-container-height);
+    padding: 20px;
+    position: relative;
+    border-radius: 20px;
+    text-align: center;
+    margin-top: 20%;
+}
+
+
+.login-container::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    z-index: -1;
+    filter: blur(calc(var(--login-container-height) / 6));
+    background-image: linear-gradient(var(--rotate), #5ddcff, #3c67e3 43%, #4e00c2);
+    opacity: 1;
+    animation: spin 5s linear infinite;
+}
+
+.login-container form {
+    margin-inline: 20%;
+}
+
+.login-container label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* GENERAL */
+button {
+    background-color: #3c67e3;
+    width: 100%;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: large;
+    border-color: #ffffff;
+    padding: 0.6em 2.3em;
+    cursor: pointer;
+    color: #ffffff;
+    background-image: linear-gradient(90deg, #3c67e3 50%, #4e00c2 50%);
+    background-position: 25%;
+    background-size: 400%;
+    transition: background 500ms cubic-bezier(0.49, 0.9, 1, -0.07);
+}
+
+button:hover {
+    color: #ffffff;
+    background-position: 100%;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: large;
+    text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    padding-inline: 10%;
+}
+
+li {
+    padding: 1%;
+    border-top: 1px solid #ccc;
+    scroll-snap-align: start;
+    width: 100%;
+}
+
+li:first-child {
+    border: 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* MAIN */
+.main {
+    display: flex;
+    padding-inline: 5%;
+    margin-top: 5%;
+    width: 100%;
+    height: 75%;
+}
+
+.tile {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px 10px rgba(0, 0, 0, 0.1);
+    padding-inline: 1%;
+    width: 100%;
+    height: 100%;
+    margin-inline: 1%;
+    display: inline-block;
+    overflow-wrap: break-word;
+    overflow: auto;
+}
+
+#database-list {
+    width: 15%;
+    height: fit-content;
+    max-height: -webkit-fill-available;
+}
+
+#refresh-databases {
+    vertical-align: middle;
+    margin-left: 10px;
+    max-width: 20px;
+    max-height: 20px;
+    cursor: pointer;
+}
+
+/* SCROLL BAR */
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #4e00c2;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #3c67e3;
+}
+
+/* TABLE */
+
+// sets
+
+$gl-ms : "screen and (max-width: 23.5em)"; // up to 360px
+$gl-xs : "screen and (max-width: 35.5em)"; // up to 568px
+$gl-sm : "screen and (max-width: 48em)"; // max 768px
+$gl-md : "screen and (max-width: 64em)"; // max 1024px
+$gl-lg : "screen and (max-width: 80em)"; // max 1280px
+
+// table style
+table {
+    text-align: left;
+    position: relative;
+    border-collapse: collapse;
+    text-align: left;
+    width: 100%;
+}
+
+th,
+td {
+    padding: 0.25rem;
+}
+
+tr.head th {
+    background: #791eff;
+    color: white;
+}
+
+tr:first-child th:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+tr:first-child th:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+th {
+    background: white;
+    position: sticky;
+    top: 0;
+    /* Don't forget this, required for the stickiness */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+}

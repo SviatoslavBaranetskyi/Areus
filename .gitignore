@@ -1,6 +1,6 @@
 /venv/
 /.idea/
 __pycache__/
-data/
+backend/data/
 .env
 *.sqlite3
