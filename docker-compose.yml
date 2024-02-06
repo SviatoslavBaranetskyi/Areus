@@ -1,12 +1,12 @@
 version: '3.9'
 
 services:
-  web:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ./src:/opt/areus/
+      - ./backend/src:/opt/areus/
       - static-data:/var/www/static
 
   nginx:

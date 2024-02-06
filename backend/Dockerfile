@@ -5,8 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE 1
 
 WORKDIR /opt/areus
 
-COPY backend/src/requirements.txt ./
-COPY backend/scripts/start.sh ../
+COPY src/requirements.txt ./
+COPY scripts/start.sh ../
 RUN chmod +x ../start.sh
 
 RUN apk update && apk add gcc libc-dev g++
