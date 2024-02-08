@@ -127,3 +127,43 @@ class GetTableRowsView(APIView):
 
         except Error as e:
             return Response({'error': f'Error fetching rows: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request):
+        database_name = request.data.get('database')
+        table_name = request.data.get('table')
+        column = request.data.get('column')
+        value = request.data.get('value')
+        unique_column = request.data.get('unique_column')
+        position = request.data.get('position')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            cursor.execute(f"SHOW KEYS FROM {database_name}.{table_name} WHERE Key_name = 'PRIMARY'")
+            primary_key_info = cursor.fetchone()
+
+            if not primary_key_info:
+                return Response({'error': 'You cannot edit data in this table because you dont have a unique column. '
+                                          'Please set the primary key to a unique column'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            primary_key_columns = primary_key_info[4].split(',')
+
+            if unique_column not in primary_key_columns:
+                return Response({'error': f'Unique column is not the primary key of the table. Use one of these: {primary_key_columns}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            update_query = f"UPDATE {database_name}.{table_name} SET {column} = %s WHERE {unique_column} = %s"
+
+            cursor.execute(update_query, (value, position))
+
+            connection.commit()
+            cursor.close()
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'success'}, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error updating row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
