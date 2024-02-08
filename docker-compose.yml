@@ -5,9 +5,20 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend/src:/opt/areus/
       - static-data:/var/www/static
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+    command: run dev
 
   nginx:
     image: nginx:1.25.3-alpine
