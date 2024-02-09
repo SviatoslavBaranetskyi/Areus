@@ -46,7 +46,7 @@ class MainPageView(TemplateView):
 
 
 @method_decorator(require_session, name="dispatch")
-class GetDatabasesView(APIView):
+class DatabasesView(APIView):
     def get(self, request):
         try:
             db = get_database_connection(request)
@@ -65,15 +65,49 @@ class GetDatabasesView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def post(self, request):
+        database_name = request.data.get('database')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+
+            if not cursor.fetchone():
+                return Response({'error': 'Database already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Database created successfully'}, status=status.HTTP_201_CREATED)
+
+        except Error as e:
+            return Response({'error': f'Error creating database: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        database_name = request.data.get('database')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            cursor.execute(f"DROP DATABASE IF EXISTS {database_name}")
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Database deleted successfully'}, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error deleting database: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @method_decorator(require_session, name="dispatch")
-class GetTablesView(APIView):
+class TablesView(APIView):
     def get(self, request):
         try:
             connection = get_database_connection(request)
             cursor = execute_query(connection, "SHOW TABLES")
 
-            # Fetch all tables
             tables = [table[0] for table in cursor.fetchall()]
 
             data = {
@@ -88,7 +122,6 @@ class GetTablesView(APIView):
                 data_length = table_data[6]
                 collation = table_data[14]
 
-                # Add table information to the data dictionary
                 data['tables'][table] = {
                     'rows': rows_count,
                     'size': data_length,
@@ -101,6 +134,63 @@ class GetTablesView(APIView):
 
         except Error as e:
             return Response({'error': f'Error fetching tables: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        database_name = request.data.get('database')
+        table_name = request.data.get('table')
+        fields = request.data.get('fields')  # List of fields that the user enters through the form
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            create_table_query = f"CREATE TABLE IF NOT EXISTS {database_name}.{table_name} ("
+
+            for field in fields:
+                field_name = field.get('name')
+                data_type = field.get('data_type')
+                allow_null = field.get('allow_null', True)
+                primary_key = field.get('primary_key', False)
+
+                create_table_query += f"{field_name} {data_type}"
+
+                if not allow_null:
+                    create_table_query += " NOT NULL"
+
+                if primary_key:
+                    create_table_query += " PRIMARY KEY"
+
+                create_table_query += ","
+
+            # Removing the last comma and ending the SQL query
+            create_table_query = create_table_query.rstrip(",")
+            create_table_query += ");"
+
+            cursor.execute(create_table_query)
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Table created successfully'}, status=status.HTTP_201_CREATED)
+
+        except Error as e:
+            return Response({'error': f'Error creating table: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        database_name = request.data.get('database')
+        table_name = request.data.get('table')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            cursor.execute(f"DROP TABLE IF EXISTS {database_name}.{table_name}")
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Table deleted successfully'}, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error deleting table: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(require_session, name="dispatch")
@@ -143,9 +233,6 @@ class TableRowsView(APIView):
 
             cursor.execute(insert_query, list(data.values()))
 
-            connection.commit()
-            cursor.close()
-
             close_database_connection(connection, cursor)
 
             return Response({'message': 'Row added successfully'}, status=status.HTTP_201_CREATED)
@@ -169,22 +256,19 @@ class TableRowsView(APIView):
             primary_key_info = cursor.fetchone()
 
             if not primary_key_info:
-                return Response({'error': 'You cannot edit data in this table because you dont have a unique column. '
-                                          'Please set the primary key to a unique column'},
+                return Response({'error': 'To edit data in this table please set the primary key to a unique column'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             primary_key_columns = primary_key_info[4].split(',')
 
             if unique_column not in primary_key_columns:
-                return Response({'error': f'Unique column is not the primary key of the table. Use one of these: {primary_key_columns}'},
+                return Response({'error': f'Unique column is not the primary key of the table. '
+                                          f'Use one of these: {primary_key_columns}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             update_query = f"UPDATE {database_name}.{table_name} SET {column} = %s WHERE {unique_column} = %s"
 
             cursor.execute(update_query, (value, position))
-
-            connection.commit()
-            cursor.close()
 
             close_database_connection(connection, cursor)
 
@@ -209,9 +293,6 @@ class TableRowsView(APIView):
             delete_query = f"DELETE FROM {database_name}.{table_name} WHERE {unique_column} = %s"
 
             cursor.execute(delete_query, (position,))
-
-            connection.commit()
-            cursor.close()
 
             close_database_connection(connection, cursor)
 
