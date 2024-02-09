@@ -1,9 +1,5 @@
-import './App.css'
+import styles from "./App.module.css";
 
 export const App = () => {
-
-  return (
-    <div>Main page</div>
-  )
-}
-
+  return <div className={styles.mainContainer}>Main page</div>;
+};
