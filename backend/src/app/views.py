@@ -104,7 +104,7 @@ class GetTablesView(APIView):
 
 
 @method_decorator(require_session, name="dispatch")
-class GetTableRowsView(APIView):
+class TableRowsView(APIView):
     def get(self, request):
         database_name = request.query_params.get('database')
         table_name = request.query_params.get('table')
@@ -127,6 +127,31 @@ class GetTableRowsView(APIView):
 
         except Error as e:
             return Response({'error': f'Error fetching rows: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        database_name = request.data.get('database')
+        table_name = request.data.get('table')
+        data = request.data.get('data')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            columns = ', '.join(data.keys())
+            placeholders = ', '.join(['%s'] * len(data))
+            insert_query = f"INSERT INTO {database_name}.{table_name} ({columns}) VALUES ({placeholders})"
+
+            cursor.execute(insert_query, list(data.values()))
+
+            connection.commit()
+            cursor.close()
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Row added successfully'}, status=status.HTTP_201_CREATED)
+
+        except Error as e:
+            return Response({'error': f'Error adding row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request):
         database_name = request.data.get('database')
@@ -167,3 +192,30 @@ class GetTableRowsView(APIView):
 
         except Error as e:
             return Response({'error': f'Error updating row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        database_name = request.data.get('database')
+        table_name = request.data.get('table')
+        unique_column = request.data.get('unique_column')
+        position = request.data.get('position')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            if not unique_column:
+                return Response({'error': 'Unique column not specified'}, status=status.HTTP_400_BAD_REQUEST)
+
+            delete_query = f"DELETE FROM {database_name}.{table_name} WHERE {unique_column} = %s"
+
+            cursor.execute(delete_query, (position,))
+
+            connection.commit()
+            cursor.close()
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'Row deleted successfully'}, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error deleting row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
