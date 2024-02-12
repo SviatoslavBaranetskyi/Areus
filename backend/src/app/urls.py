@@ -1,4 +1,5 @@
 from django.urls import path
+from .yasg import urlpatterns as doc_urls
 
 from . import views
 
@@ -10,3 +11,5 @@ urlpatterns = [
     path('api/tables/', views.TablesView.as_view(), name='tables'),
     path('api/table-rows/', views.TableRowsView.as_view(), name='table-rows')
 ]
+
+urlpatterns += doc_urls
