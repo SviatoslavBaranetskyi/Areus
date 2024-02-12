@@ -3,6 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.base import TemplateView
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from mysql.connector import connect, Error
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -47,6 +49,11 @@ class MainPageView(TemplateView):
 
 @method_decorator(require_session, name="dispatch")
 class DatabasesView(APIView):
+
+    @swagger_auto_schema(
+        operation_description="Retrieve list of databases",
+        responses={status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT)},
+    )
     def get(self, request):
         try:
             db = get_database_connection(request)
@@ -65,6 +72,19 @@ class DatabasesView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Create a new database",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database to create")
+            }
+        ),
+        responses={
+            status.HTTP_201_CREATED: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_400_BAD_REQUEST: "Bad request"
+        }
+    )
     def post(self, request):
         database_name = request.data.get('database')
 
@@ -84,6 +104,19 @@ class DatabasesView(APIView):
         except Error as e:
             return Response({'error': f'Error creating database: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Delete a database",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database to delete")
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_400_BAD_REQUEST: "Bad request"
+        }
+    )
     def delete(self, request):
         database_name = request.data.get('database')
 
@@ -103,6 +136,16 @@ class DatabasesView(APIView):
 
 @method_decorator(require_session, name="dispatch")
 class TablesView(APIView):
+
+    @swagger_auto_schema(
+        operation_description="Retrieve list of tables",
+        manual_parameters=[
+            openapi.Parameter(
+                'database', openapi.IN_QUERY, description="Name of the database to retrieve tables from", type=openapi.TYPE_STRING
+            )
+        ],
+        responses={status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT)},
+    )
     def get(self, request):
         try:
             connection = get_database_connection(request)
@@ -135,6 +178,32 @@ class TablesView(APIView):
         except Error as e:
             return Response({'error': f'Error fetching tables: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Create a new table",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
+                'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table to create"),
+                'fields': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'name': openapi.Schema(type=openapi.TYPE_STRING, description="Field name"),
+                            'data_type': openapi.Schema(type=openapi.TYPE_STRING, description="Field data type"),
+                            'allow_null': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Whether field allows null values"),
+                            'primary_key': openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Whether field is primary key"),
+                        }
+                    )
+                )
+            }
+        ),
+        responses={
+            status.HTTP_201_CREATED: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_400_BAD_REQUEST: "Bad request"
+        }
+    )
     def post(self, request):
         database_name = request.data.get('database')
         table_name = request.data.get('table')
@@ -175,6 +244,20 @@ class TablesView(APIView):
         except Error as e:
             return Response({'error': f'Error creating table: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Delete a table",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
+                'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table to delete")
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_400_BAD_REQUEST: "Bad request"
+        }
+    )
     def delete(self, request):
         database_name = request.data.get('database')
         table_name = request.data.get('table')
@@ -195,6 +278,18 @@ class TablesView(APIView):
 
 @method_decorator(require_session, name="dispatch")
 class TableRowsView(APIView):
+    @swagger_auto_schema(
+        operation_description="Retrieve rows from a table",
+        manual_parameters=[
+            openapi.Parameter(
+                'database', openapi.IN_QUERY, description="Name of the database", type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'table', openapi.IN_QUERY, description="Name of the table", type=openapi.TYPE_STRING
+            )
+        ],
+        responses={status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT)},
+    )
     def get(self, request):
         database_name = request.query_params.get('database')
         table_name = request.query_params.get('table')
@@ -218,6 +313,28 @@ class TableRowsView(APIView):
         except Error as e:
             return Response({'error': f'Error fetching rows: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Add a new row to a table",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
+                'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
+                'data': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'column1': openapi.Schema(type=openapi.TYPE_STRING),
+                        'column2': openapi.Schema(type=openapi.TYPE_STRING),
+                        '...': openapi.Schema(type=openapi.TYPE_STRING),
+                        }
+                )
+            }
+        ),
+        responses={
+            status.HTTP_201_CREATED: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: "Internal Server Error"
+        }
+    )
     def post(self, request):
         database_name = request.data.get('database')
         table_name = request.data.get('table')
@@ -240,6 +357,24 @@ class TableRowsView(APIView):
         except Error as e:
             return Response({'error': f'Error adding row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Update a row in a table",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
+                'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
+                'column': openapi.Schema(type=openapi.TYPE_STRING, description="Column to update"),
+                'value': openapi.Schema(type=openapi.TYPE_STRING, description="New value for the column"),
+                'unique_column': openapi.Schema(type=openapi.TYPE_STRING, description="Unique column identifier"),
+                'position': openapi.Schema(type=openapi.TYPE_STRING, description="Position of the row to update")
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: "Internal Server Error"
+        }
+    )
     def put(self, request):
         database_name = request.data.get('database')
         table_name = request.data.get('table')
@@ -277,6 +412,22 @@ class TableRowsView(APIView):
         except Error as e:
             return Response({'error': f'Error updating row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        operation_description="Delete a row from a table",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
+                'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
+                'unique_column': openapi.Schema(type=openapi.TYPE_STRING, description="Unique column identifier"),
+                'position': openapi.Schema(type=openapi.TYPE_STRING, description="Position of the row to delete")
+            }
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: "Internal Server Error"
+        }
+    )
     def delete(self, request):
         database_name = request.data.get('database')
         table_name = request.data.get('table')
