@@ -76,6 +76,7 @@ class DatabasesView(APIView):
         operation_description="Create a new database",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database to create")
             }
@@ -108,6 +109,7 @@ class DatabasesView(APIView):
         operation_description="Delete a database",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database to delete")
             }
@@ -141,7 +143,8 @@ class TablesView(APIView):
         operation_description="Retrieve list of tables",
         manual_parameters=[
             openapi.Parameter(
-                'database', openapi.IN_QUERY, description="Name of the database to retrieve tables from", type=openapi.TYPE_STRING
+                'database', openapi.IN_QUERY, description="Name of the database to retrieve tables from",
+                type=openapi.TYPE_STRING
             )
         ],
         responses={status.HTTP_200_OK: openapi.Schema(type=openapi.TYPE_OBJECT)},
@@ -182,6 +185,7 @@ class TablesView(APIView):
         operation_description="Create a new table",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database', 'table', 'fields'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
                 'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table to create"),
@@ -248,6 +252,7 @@ class TablesView(APIView):
         operation_description="Delete a table",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database', 'table'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
                 'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table to delete")
@@ -317,6 +322,7 @@ class TableRowsView(APIView):
         operation_description="Add a new row to a table",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database', 'table', 'data'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
                 'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
@@ -361,6 +367,7 @@ class TableRowsView(APIView):
         operation_description="Update a row in a table",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database', 'table', 'column', 'value', 'unique_column', 'position'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
                 'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
@@ -416,6 +423,7 @@ class TableRowsView(APIView):
         operation_description="Delete a row from a table",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=['database', 'table', 'unique_column', 'position'],
             properties={
                 'database': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the database"),
                 'table': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the table"),
@@ -451,3 +459,118 @@ class TableRowsView(APIView):
 
         except Error as e:
             return Response({'error': f'Error deleting row: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UserView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get all users",
+        responses={200: "List of users", 500: "Internal Server Error"}
+    )
+    def get(self, request):
+        try:
+            connection = get_database_connection(request)
+            cursor = execute_query(connection, "SELECT User, Host FROM mysql.user")
+            users_data = cursor.fetchall()
+            users = []
+
+            for user_data in users_data:
+                user = {'user': user_data[0], 'host': user_data[1]}
+                grants_cursor = execute_query(connection, f"SHOW GRANTS FOR '{user_data[0]}'@'{user_data[1]}'")
+                grants = [grant[0] for grant in grants_cursor.fetchall()]
+                user['grants'] = grants
+                users.append(user)
+
+            close_database_connection(connection, cursor)
+
+            return Response(users, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @swagger_auto_schema(
+        operation_description='Create a new User',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['host', 'username', 'password', 'privileges', 'databases', 'tables'],
+            properties={
+                'host': openapi.Schema(type=openapi.TYPE_STRING),
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'privileges': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+                ),
+                'databases': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+                ),
+                'tables': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING))
+                ),
+            },
+        ),
+        responses={200: 'User created successfully', 500: 'Error creating user'},
+    )
+    def post(self, request):
+        try:
+            host = request.data.get('host')
+            username = request.data.get('username')
+            password = request.data.get('password')
+            privileges = request.data.get('privileges')
+            databases = request.data.get('databases')
+            tables = request.data.get('tables')
+
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+
+            create_user_query = f"CREATE USER '{username}'@'{host}' IDENTIFIED BY '{password}'"
+            cursor.execute(create_user_query)
+
+            for i in range(len(databases)):
+                database = databases[i][0]
+                db_identifier = "*" if database == "All" else database
+
+                for j in range(len(tables[i])):
+                    table = tables[i][j]
+                    table_identifier = "*" if table == "All" else table
+
+                    privileges_str = "ALL PRIVILEGES" if privileges == "All" else ", ".join(privileges[i])
+
+                    grant_query = f"GRANT {privileges_str} ON {db_identifier}.{table_identifier} TO '{username}'@'{host}' WITH GRANT OPTION"
+                    cursor.execute(grant_query)
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'error': f'Error creating user: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @swagger_auto_schema(
+        operation_description='Delete a user',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['host', 'username'],
+            properties={
+                'host': openapi.Schema(type=openapi.TYPE_STRING),
+                'username': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        responses={200: "User deleted successfully", 500: "Internal Server Error"}
+    )
+    def delete(self, request):
+        host = request.data.get('host')
+        username = request.data.get('username')
+
+        try:
+            connection = get_database_connection(request)
+            cursor = connection.cursor()
+            cursor.execute(f"DROP USER '{username}'@'{host}'")
+
+            close_database_connection(connection, cursor)
+
+            return Response({'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
+
+        except Error as e:
+            return Response({'error': f'Error deleting user: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
