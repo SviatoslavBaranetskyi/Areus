@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.base import TemplateView
@@ -15,9 +16,35 @@ from .decorators import require_session
 from .utils import get_database_connection, close_database_connection, execute_query
 
 
-def login(request):
-    if request.method == "POST":
-        form = LoginForm(request.POST)
+class LoginView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get login form",
+        responses={
+            status.HTTP_200_OK: openapi.Response(description="Login form HTML"),
+        }
+    )
+    def get(self, request):
+        form = LoginForm()
+        return render(request, 'app/login.html', {'form': form})
+
+    @swagger_auto_schema(
+        operation_description="User Login",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['host', 'username', 'password'],
+            properties={
+                'host': openapi.Schema(type=openapi.TYPE_STRING, description="Database host"),
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description="Database username"),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description="Database password")
+            }
+        ),
+        responses={
+            status.HTTP_302_FOUND: "Redirect to home page",
+            status.HTTP_400_BAD_REQUEST: "Bad request"
+        }
+    )
+    def post(self, request):
+        form = LoginForm(request.data)
         if form.is_valid():
             host = form.cleaned_data['host']
             username = form.cleaned_data['username']
@@ -32,9 +59,7 @@ def login(request):
             request.session['password'] = password
 
             return HttpResponseRedirect('/')
-
-    form = LoginForm()
-    return render(request, 'app/login.html', {'form': form})
+        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def logout(request):
