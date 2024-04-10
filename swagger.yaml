@@ -1,0 +1,461 @@
+swagger: '2.0'
+info:
+  title: Areus
+  description: "\nThe objective of this project is to develop a simplified web application
+    for managing databases, \ninspired by phpMyAdmin. This project, built using the
+    Django framework, emphasizes a clean design, modern \naesthetics, and enhanced
+    performance. The development process will be divided into several steps, gradually
+    \nbuilding functionality and refining the user interface.\n"
+  license:
+    name: BSD License
+  version: v1
+host: localhost:8000
+schemes:
+- http
+basePath: /
+consumes:
+- application/json
+produces:
+- application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+- Basic: []
+paths:
+  /api/databases/:
+    get:
+      operationId: api_databases_list
+      description: Retrieve list of databases
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+      tags:
+      - api
+    post:
+      operationId: api_databases_create
+      description: Create a new database
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          type: object
+          properties:
+            database:
+              description: Name of the database to create
+              type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            type: object
+        '400':
+          description: Bad request
+      tags:
+      - api
+    delete:
+      operationId: api_databases_delete
+      description: Delete a database
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          type: object
+          properties:
+            database:
+              description: Name of the database to delete
+              type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+        '400':
+          description: Bad request
+      tags:
+      - api
+    parameters: []
+  /api/table-rows/:
+    get:
+      operationId: api_table-rows_list
+      description: Retrieve rows from a table
+      parameters:
+      - name: database
+        in: query
+        description: Name of the database
+        type: string
+      - name: table
+        in: query
+        description: Name of the table
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+      tags:
+      - api
+    post:
+      operationId: api_table-rows_create
+      description: Add a new row to a table
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          - table
+          - data
+          type: object
+          properties:
+            database:
+              description: Name of the database
+              type: string
+            table:
+              description: Name of the table
+              type: string
+            data:
+              type: object
+              properties:
+                column1:
+                  type: string
+                column2:
+                  type: string
+                '...':
+                  type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            type: object
+        '500':
+          description: Internal Server Error
+      tags:
+      - api
+    put:
+      operationId: api_table-rows_update
+      description: Update a row in a table
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          - table
+          - column
+          - value
+          - unique_column
+          - position
+          type: object
+          properties:
+            database:
+              description: Name of the database
+              type: string
+            table:
+              description: Name of the table
+              type: string
+            column:
+              description: Column to update
+              type: string
+            value:
+              description: New value for the column
+              type: string
+            unique_column:
+              description: Unique column identifier
+              type: string
+            position:
+              description: Position of the row to update
+              type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+        '500':
+          description: Internal Server Error
+      tags:
+      - api
+    delete:
+      operationId: api_table-rows_delete
+      description: Delete a row from a table
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          - table
+          - unique_column
+          - position
+          type: object
+          properties:
+            database:
+              description: Name of the database
+              type: string
+            table:
+              description: Name of the table
+              type: string
+            unique_column:
+              description: Unique column identifier
+              type: string
+            position:
+              description: Position of the row to delete
+              type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+        '500':
+          description: Internal Server Error
+      tags:
+      - api
+    parameters: []
+  /api/tables/:
+    get:
+      operationId: api_tables_list
+      description: Retrieve list of tables
+      parameters:
+      - name: database
+        in: query
+        description: Name of the database to retrieve tables from
+        type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+      tags:
+      - api
+    post:
+      operationId: api_tables_create
+      description: Create a new table
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          - table
+          - fields
+          type: object
+          properties:
+            database:
+              description: Name of the database
+              type: string
+            table:
+              description: Name of the table to create
+              type: string
+            fields:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    description: Field name
+                    type: string
+                  data_type:
+                    description: Field data type
+                    type: string
+                  allow_null:
+                    description: Whether field allows null values
+                    type: boolean
+                  primary_key:
+                    description: Whether field is primary key
+                    type: boolean
+      responses:
+        '201':
+          description: ''
+          schema:
+            type: object
+        '400':
+          description: Bad request
+      tags:
+      - api
+    delete:
+      operationId: api_tables_delete
+      description: Delete a table
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - database
+          - table
+          type: object
+          properties:
+            database:
+              description: Name of the database
+              type: string
+            table:
+              description: Name of the table to delete
+              type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+        '400':
+          description: Bad request
+      tags:
+      - api
+    parameters: []
+  /api/users/:
+    get:
+      operationId: api_users_list
+      description: Get all users
+      parameters: []
+      responses:
+        '200':
+          description: List of users
+        '500':
+          description: Internal Server Error
+      tags:
+      - api
+    post:
+      operationId: api_users_create
+      description: Create a new User
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - host
+          - username
+          - password
+          - privileges
+          - databases
+          - tables
+          type: object
+          properties:
+            host:
+              type: string
+            username:
+              type: string
+            password:
+              type: string
+            privileges:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+            databases:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+            tables:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: User created successfully
+        '500':
+          description: Error creating user
+      tags:
+      - api
+    delete:
+      operationId: api_users_delete
+      description: Delete a user
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - host
+          - username
+          type: object
+          properties:
+            host:
+              type: string
+            username:
+              type: string
+      responses:
+        '200':
+          description: User deleted successfully
+        '500':
+          description: Internal Server Error
+      tags:
+      - api
+    parameters: []
+  /login/:
+    get:
+      operationId: login_list
+      description: Get login form
+      parameters: []
+      responses:
+        '200':
+          description: Login form HTML
+      tags:
+      - login
+    post:
+      operationId: login_create
+      description: User Login
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          required:
+          - host
+          - username
+          - password
+          type: object
+          properties:
+            host:
+              description: Database host
+              type: string
+            username:
+              description: Database username
+              type: string
+            password:
+              description: Database password
+              type: string
+      responses:
+        '201':
+          description: ''
+          schema:
+            required:
+            - host
+            - username
+            - password
+            type: object
+            properties:
+              host:
+                description: Database host
+                type: string
+              username:
+                description: Database username
+                type: string
+              password:
+                description: Database password
+                type: string
+        '302':
+          description: Redirect to home page
+        '400':
+          description: Bad request
+      tags:
+      - login
+    parameters: []
+definitions: {}
