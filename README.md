@@ -36,9 +36,9 @@ docker compose -f docker-compose.prod.yml up
 - Implement support for additional database management systems
 - Enhance the user interface
 ## Developers
-- Sviatoslav Baranetskyi
+- Sviatoslav Baranetskyi<br>
   Email: svyatoslav.baranetskiy738@gmail.com
-- Danylo Havryliv
+- Danylo Havryliv<br>
   Email: evg829@gmail.com
-- Huk Maksym
+- Huk Maksym<br>
   Email: mkaimg1@gmail.com
